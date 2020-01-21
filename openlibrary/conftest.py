@@ -67,3 +67,18 @@ def render_template(request):
         d = infobase_render_template(name, *a, **kw)
         return six.text_type(d) if as_string else d
     return render
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--filename",
+        type=lambda s: s.split(' '),
+        default=[],
+        help="filenames to parameterize tests",
+    )
+
+
+def pytest_generate_tests(metafunc):
+    if "filename" in metafunc.fixturenames:
+        filenames = [f for f in metafunc.config.getoption("filename") if f]
+        metafunc.parametrize("filename", filenames)
