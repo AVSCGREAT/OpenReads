@@ -79,3 +79,4 @@ endif
 test:
 	npm test
 	pytest openlibrary/tests openlibrary/mocks openlibrary/olbase openlibrary/plugins openlibrary/utils openlibrary/catalog openlibrary/coverstore scripts/tests
+	./scripts/validate_templates.sh
