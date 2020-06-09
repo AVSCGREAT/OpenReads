@@ -91,7 +91,7 @@ $var title: $page.title
             <div class="user-book-options">
               $if "lists" in ctx.features:
                 <div class="Tools tools-override">
-                  $:render_template("lists/widget", page, include_header=False)
+                  $:render_template_lazy("lists/widget", page, include_header=False)
                 </div>
             </div>
         </div>
@@ -190,9 +190,12 @@ $var title: $page.title
           </script>
 
         <div class="clearfix"></div>
-        $:render_template("type/work/editions_datatable", page)
+        $if page.edition_count > 10:
+            $:render_template_lazy("type/work/editions_datatable", page)
+        $else:
+            $:render_template("type/work/editions_datatable", page)
 
-        $:macros.RelatedWorksCarousel(page)
+        $:render_macro_lazy('RelatedWorksCarousel', page)
 
         $:render_template("lib/history", page)
     </div>
