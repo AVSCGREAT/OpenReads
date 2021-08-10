@@ -458,7 +458,7 @@ def url_quote(text):
 
 
 @public
-def urlencode(dict_or_list_of_tuples):
+def urlencode(dict_or_list_of_tuples, plus=True):
     """
     You probably want to use this, if you're looking to urlencode parameters. This will
     encode things to utf8 that would otherwise cause urlencode to error.
@@ -473,7 +473,11 @@ def urlencode(dict_or_list_of_tuples):
         (k, v.encode('utf-8') if isinstance(v, six.text_type) else v)
         for (k, v) in tuples
     ]
-    return og_urlencode(params)
+    if plus:
+        return og_urlencode(params)
+    else:
+        from six.moves.urllib.parse import quote
+        return og_urlencode(params, quote_via=quote)
 
 
 @public
