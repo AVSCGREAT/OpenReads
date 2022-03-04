@@ -7,4 +7,5 @@ python --version
 
 echo "Waiting for postgres..."
 until pg_isready --host db; do sleep 5; done
-make reindex-solr
+time make reindex-solr
+echo "You may now open http://localhost:8080"

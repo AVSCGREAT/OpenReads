@@ -7,6 +7,7 @@ from json import JSONDecodeError
 from math import ceil
 from statistics import median
 from typing import Literal, List, Optional, cast, TypedDict, Set, Dict, Any, Union
+from timeit import default_timer as timer
 
 import httpx
 import requests
@@ -17,6 +18,8 @@ from httpx import HTTPError, TimeoutException
 from six.moves.urllib.parse import urlparse
 from collections import defaultdict
 from unicodedata import normalize
+from joblib import Parallel, delayed
+import psycopg2
 
 import json
 import six
@@ -1479,6 +1482,9 @@ def update_keys(
     commit_way_later=False,
     skip_id_check=False,
     update: Literal['update', 'print', 'pprint', 'quiet'] = 'update',
+    # 16 threads was picked based on tests in local development.
+    # May not be optimal for all envs
+    number_threads=16,
 ):
     """
     Insert/update the documents with the provided keys in Solr.
@@ -1491,8 +1497,11 @@ def update_keys(
     :param bool commit_way_later: set to true if you want to add things quickly and add
         them much later
     """
+    start = timer()
     logger.debug("BEGIN update_keys")
     commit_way_later_dur = 1000 * 60 * 60 * 24 * 5  # 5 days?
+    timer_results = (f"RESULTS OF TIMER FOR KEYS LIKE {keys[0]}"
+                     f" with {number_threads} threads \n")
 
     def _solr_update(requests: list[SolrUpdateRequest], commitWithin=60000):
         if update == 'update':
@@ -1523,8 +1532,23 @@ def update_keys(
     # Get works for all the editions
     ekeys = {k for k in keys if k.startswith("/books/")}
 
+    # I wonder if sorting the ekeys could help since it would lead to
+    # requests all being near each other in DB such as 1,2,3,4 etc instead of random
+    # ekeys = list(ekeys)
+    # ekeys.sort()
+
+    timer_results += f"before preload_documents {timer() - start}\n"
+    start = timer()
     data_provider.preload_documents(ekeys)
-    for k in ekeys:
+
+    timer_results += f"preload_documents {timer() - start}\n"
+    start = timer()
+
+    def handle_ekey(k):
+        output_dict = {
+            'deletes': [],
+            'wkeys': set()
+        }
         logger.debug("processing edition %s", k)
         edition = data_provider.get_document(k)
 
@@ -1535,11 +1559,11 @@ def update_keys(
         # When the given key is not found or redirects to another edition/work,
         # explicitly delete the key. It won't get deleted otherwise.
         if not edition or edition['key'] != k:
-            deletes.append(k)
+            output_dict['deletes'].append(k)
 
         if not edition:
             logger.warn("No edition found for key %r. Ignoring...", k)
-            continue
+            return output_dict
         elif edition['type']['key'] != '/type/edition':
             logger.info(
                 "%r is a document of type %r. Checking if any work has it as edition in solr...",
@@ -1549,7 +1573,7 @@ def update_keys(
             wkey = solr_select_work(k)
             if wkey:
                 logger.info("found %r, updating it...", wkey)
-                wkeys.add(wkey)
+                output_dict['wkeys'].add(wkey)
 
             if edition['type']['key'] == '/type/delete':
                 logger.info(
@@ -1557,19 +1581,30 @@ def update_keys(
                     edition['type']['key'],
                 )
                 # Also remove if there is any work with that key in solr.
-                wkeys.add(k)
+                output_dict['wkeys'].add(k)
             else:
                 logger.warn(
                     "Found a document of type %r. Ignoring...", edition['type']['key']
                 )
         else:
             if edition.get("works"):
-                wkeys.add(edition["works"][0]['key'])
+                output_dict['wkeys'].add(edition["works"][0]['key'])
                 # Make sure we remove any fake works created from orphaned editons
-                deletes.append(k.replace('/books/', '/works/'))
+                output_dict['deletes'].append(k.replace('/books/', '/works/'))
             else:
                 # index the edition as it does not belong to any work
-                wkeys.add(k)
+                output_dict['wkeys'].add(k)
+        return output_dict
+
+    ekey_responses = Parallel(n_jobs=number_threads, prefer="threads")(
+        delayed(handle_ekey)(k) for k in ekeys
+    )
+    for response in ekey_responses:
+        deletes += response['deletes']
+        wkeys.update(response['wkeys'])
+
+    timer_results += f"time of ekeys loop {timer() - start}\n"
+    start = timer()
 
     # Add work keys
     wkeys.update(k for k in keys if k.startswith("/works/"))
@@ -1580,13 +1615,26 @@ def update_keys(
     # update works
     requests: list[SolrUpdateRequest] = []
     requests += [DeleteRequest(deletes)]
-    for k in wkeys:
-        logger.debug("updating work %s", k)
+
+    def handle_wkey(wkey):
+        logger.debug("updating work %s", wkey)
         try:
-            w = data_provider.get_document(k)
-            requests += update_work(w)
+            w = data_provider.get_document(wkey)
+            return update_work(w)
         except:
-            logger.error("Failed to update work %s", k, exc_info=True)
+            logger.error("Failed to update work %s", wkey, exc_info=True)
+            return []
+
+    timer_results += f"before update wkeys {timer() - start}\n"
+    start = timer()
+    wkey_responses = Parallel(n_jobs=number_threads, prefer="threads")(
+        delayed(handle_wkey)(k) for k in wkeys
+    )
+    for arr in wkey_responses:
+        requests += arr
+    timer_results += f"update wkeys {timer() - start}\n"
+    start = timer()
+
 
     if requests:
         if commit:
@@ -1626,6 +1674,8 @@ def update_keys(
             _solr_update(requests, commitWithin=1000)
 
     logger.debug("END update_keys")
+    timer_results += f"up to end {timer() - start}\n"
+    logger.info(timer_results)
 
 
 def solr_escape(query):
@@ -1698,6 +1748,7 @@ def main(
     solr_base: str = None,
     solr_next=False,
     update: Literal['update', 'print'] = 'update',
+    number_threads=16,
 ):
     """
     Insert the documents with the given keys into Solr.
@@ -1712,6 +1763,7 @@ def main(
     :param solr_base: If wanting to override openlibrary.yml
     :param solr_next: Whether to assume schema of next solr version is active
     :param update: Whether/how to do the actual solr update call
+    :param number_threads: how many threads to use when updating keys
     """
     load_configs(ol_url, ol_config, data_provider)
 
@@ -1732,10 +1784,4 @@ def main(
         _, info = f(keys, commit)
         print(info)
     else:
-        update_keys(keys, commit=commit, output_file=output_file, update=update)
-
-
-if __name__ == '__main__':
-    from scripts.solr_builder.solr_builder.fn_to_cli import FnToCLI
-
-    FnToCLI(main).run()
+        update_keys(keys, commit=commit, output_file=output_file, update=update, number_threads=number_threads)
