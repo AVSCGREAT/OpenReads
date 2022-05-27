@@ -171,8 +171,7 @@ class Test_build_data:
         d = await build_data(work)
         assert d['edition_key'] == ["OL1M", "OL2M", "OL3M"]
 
-    @pytest.mark.asyncio
-    async def test_publish_year(self):
+    def test_publish_year(self):
         test_dates = [
             "2000",
             "Another 2000",
@@ -183,13 +182,9 @@ class Test_build_data:
             "Bad date 12",
             "Bad date 123412314",
         ]
-        work = make_work()
-        update_work.data_provider = FakeDataProvider(
-            [work] + [make_edition(work, publish_date=date) for date in test_dates]
-        )
-
-        d = await build_data(work)
-        assert sorted(d['publish_year']) == ["2000", "2001", "2002", "2003", "2004"]
+        editions = [make_edition(None, publish_date=date) for date in test_dates]
+        d = SolrProcessor.build_publish_date_data(editions)
+        assert sorted(d['publish_year']) == [2000, 2001, 2002, 2003, 2004]
         assert d["first_publish_year"] == 2000
 
     @pytest.mark.asyncio
@@ -253,17 +248,10 @@ class Test_build_data:
     async def test_with_one_lending_edition(self):
         w = make_work()
         update_work.data_provider = FakeDataProvider(
-            [
-                w,
-                make_edition(
-                    w,
-                    key="/books/OL1M",
-                    ocaid='foo00bar',
-                    _ia_meta={"collection": ['inlibrary', 'americana']},
-                ),
-            ]
+            [w, make_edition(w, key="/books/OL1M", ocaid='foo00bar')]
         )
-        d = await build_data(w)
+        ia_metadata = {"foo00bar": {"collection": ['inlibrary', 'americana']}}
+        d = await build_data(w, ia_metadata)
         assert d['has_fulltext'] is True
         assert d['public_scan_b'] is False
         assert 'printdisabled_s' not in d
@@ -279,21 +267,15 @@ class Test_build_data:
         update_work.data_provider = FakeDataProvider(
             [
                 w,
-                make_edition(
-                    w,
-                    key="/books/OL1M",
-                    ocaid='foo01bar',
-                    _ia_meta={"collection": ['inlibrary', 'americana']},
-                ),
-                make_edition(
-                    w,
-                    key="/books/OL2M",
-                    ocaid='foo02bar',
-                    _ia_meta={"collection": ['inlibrary', 'internetarchivebooks']},
-                ),
+                make_edition(w, key="/books/OL1M", ocaid='foo01bar'),
+                make_edition(w, key="/books/OL2M", ocaid='foo02bar'),
             ]
         )
-        d = await build_data(w)
+        ia_metadata = {
+            "foo01bar": {"collection": ['inlibrary', 'americana']},
+            "foo02bar": {"collection": ['inlibrary', 'internetarchivebooks']},
+        }
+        d = await build_data(w, ia_metadata)
         assert d['has_fulltext'] is True
         assert d['public_scan_b'] is False
         assert 'printdisabled_s' not in d
@@ -309,17 +291,10 @@ class Test_build_data:
     async def test_with_one_inlibrary_edition(self):
         w = make_work()
         update_work.data_provider = FakeDataProvider(
-            [
-                w,
-                make_edition(
-                    w,
-                    key="/books/OL1M",
-                    ocaid='foo00bar',
-                    _ia_meta={"collection": ['printdisabled', 'inlibrary']},
-                ),
-            ]
+            [w, make_edition(w, key="/books/OL1M", ocaid='foo00bar')]
         )
-        d = await build_data(w)
+        ia_metadata = {"foo00bar": {"collection": ['printdisabled', 'inlibrary']}}
+        d = await build_data(w, ia_metadata)
         assert d['has_fulltext'] is True
         assert d['public_scan_b'] is False
         assert d['printdisabled_s'] == 'OL1M'
@@ -333,17 +308,10 @@ class Test_build_data:
     async def test_with_one_printdisabled_edition(self):
         w = make_work()
         update_work.data_provider = FakeDataProvider(
-            [
-                w,
-                make_edition(
-                    w,
-                    key="/books/OL1M",
-                    ocaid='foo00bar',
-                    _ia_meta={"collection": ['printdisabled', 'americana']},
-                ),
-            ]
+            [w, make_edition(w, key="/books/OL1M", ocaid='foo00bar')]
         )
-        d = await build_data(w)
+        ia_metadata = {"foo00bar": {"collection": ['printdisabled', 'americana']}}
+        d = await build_data(w, ia_metadata)
         assert d['has_fulltext'] is True
         assert d['public_scan_b'] is False
         assert d['printdisabled_s'] == 'OL1M'
@@ -372,35 +340,23 @@ class Test_build_data:
             [
                 w,
                 make_edition(w, key="/books/OL1M"),
-                make_edition(
-                    w,
-                    key="/books/OL2M",
-                    ocaid='foo00bar',
-                    _ia_meta={"collection": ['americana']},
-                ),
-                make_edition(
-                    w,
-                    key="/books/OL3M",
-                    ocaid='foo01bar',
-                    _ia_meta={"collection": ['inlibrary', 'americana']},
-                ),
-                make_edition(
-                    w,
-                    key="/books/OL4M",
-                    ocaid='foo02bar',
-                    _ia_meta={"collection": ['printdisabled', 'inlibrary']},
-                ),
+                make_edition(w, key="/books/OL2M", ocaid='foo00bar'),
+                make_edition(w, key="/books/OL3M", ocaid='foo01bar'),
+                make_edition(w, key="/books/OL4M", ocaid='foo02bar'),
             ]
         )
-        d = await build_data(w)
+        ia_metadata = {
+            "foo00bar": {"collection": ['americana']},
+            "foo01bar": {"collection": ['inlibrary', 'americana']},
+            "foo02bar": {"collection": ['printdisabled', 'inlibrary']},
+        }
+        d = await build_data(w, ia_metadata)
         assert d['has_fulltext'] is True
         assert d['public_scan_b'] is True
         assert d['printdisabled_s'] == 'OL4M'
         assert d['lending_edition_s'] == 'OL2M'
         assert sorted(d['ia']) == ['foo00bar', 'foo01bar', 'foo02bar']
-        assert sss(d['ia_collection_s']) == sss(
-            "americana;inlibrary;printdisabled"
-        )
+        assert sss(d['ia_collection_s']) == sss("americana;inlibrary;printdisabled")
 
         assert d['edition_count'] == 4
         assert d['ebook_count_i'] == 3
@@ -479,26 +435,21 @@ class Test_build_data:
         ),
     }
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "doc_lccs,solr_lccs,sort_lcc_index", LCC_TESTS.values(), ids=LCC_TESTS.keys()
     )
-    async def test_lccs(self, doc_lccs, solr_lccs, sort_lcc_index):
-        work = make_work()
-        update_work.data_provider = FakeDataProvider(
+    def test_lccs(self, doc_lccs, solr_lccs, sort_lcc_index):
+        doc = SolrProcessor.build_lcc_data(
             [
-                work,
-                make_edition(work, lc_classifications=doc_lccs),
+                make_edition(None, lc_classifications=doc_lccs),
             ]
         )
-        d = await build_data(work)
         if solr_lccs:
-            assert sorted(d.get('lcc')) == solr_lccs
+            assert sorted(doc['lcc']) == solr_lccs
             if sort_lcc_index is not None:
-                assert d.get('lcc_sort') == solr_lccs[sort_lcc_index]
+                assert doc['lcc_sort'] == solr_lccs[sort_lcc_index]
         else:
-            assert 'lcc' not in d
-            assert 'lcc_sort' not in d
+            assert doc == {}
 
     DDC_TESTS = {
         'Remove dupes': (['123.5', '123.5'], ['123.5'], 0),
@@ -521,25 +472,20 @@ class Test_build_data:
         'Skips 092s': (['092', '123.5'], ['123.5'], 0),
     }
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "doc_ddcs,solr_ddcs,sort_ddc_index", DDC_TESTS.values(), ids=DDC_TESTS.keys()
     )
-    async def test_ddcs(self, doc_ddcs, solr_ddcs, sort_ddc_index):
-        work = make_work()
-        update_work.data_provider = FakeDataProvider(
+    def test_ddcs(self, doc_ddcs, solr_ddcs, sort_ddc_index):
+        doc = SolrProcessor.build_ddc_data(
             [
-                work,
-                make_edition(work, dewey_decimal_class=doc_ddcs),
+                make_edition(None, dewey_decimal_class=doc_ddcs),
             ]
         )
-        d = await build_data(work)
         if solr_ddcs:
-            assert sorted(d.get('ddc')) == solr_ddcs
-            assert d.get('ddc_sort') == solr_ddcs[sort_ddc_index]
+            assert sorted(doc['ddc']) == solr_ddcs
+            assert doc['ddc_sort'] == solr_ddcs[sort_ddc_index]
         else:
-            assert 'ddc' not in d
-            assert 'ddc_sort' not in d
+            assert doc == {}
 
 
 class MockResponse:
@@ -707,69 +653,63 @@ class Test_pick_number_of_pages_median:
         eds = [{}, {}] + [{'number_of_pages': n} for n in [123, 122, 1]]
         assert pick_number_of_pages_median(eds) == 122
 
+
 class Test_Sort_Editions_Ocaids:
-
     def test_sort(self):
-        editions = [{
-            "key": "/books/OL789M",
-            "ocaid": "ocaid_restricted",
-            "access_restricted_item": "true",
-            "ia_collection": []
-        }, {
-            "key": "/books/OL567M",
-            "ocaid": "ocaid_printdisabled",
-            "access_restricted_item": "true",
-            "ia_collection": ["printdisabled"]
-        }, {
-            "key": "/books/OL234M",
-            "ocaid": "ocaid_borrowable",
-            "access_restricted_item": "true",
-            "ia_collection": ["inlibrary"]
-        }, {
-            "key": "/books/OL123M",
-            "ocaid": "ocaid_open",
-            "access_restricted_item": "false",
-            "ia_collection": ["americanlibraries"]
-        }]
+        editions = [
+            {"key": "/books/OL789M", "ocaid": "ocaid_restricted"},
+            {"key": "/books/OL567M", "ocaid": "ocaid_printdisabled"},
+            {"key": "/books/OL234M", "ocaid": "ocaid_borrowable"},
+            {"key": "/books/OL123M", "ocaid": "ocaid_open"},
+        ]
+        ia_md = {
+            "ocaid_restricted": {
+                "access_restricted_item": "true",
+                'collection': [],
+            },
+            "ocaid_printdisabled": {
+                "access_restricted_item": "true",
+                "collection": ["printdisabled"],
+            },
+            "ocaid_borrowable": {
+                "access_restricted_item": "true",
+                "collection": ["inlibrary"],
+            },
+            "ocaid_open": {
+                "access_restricted_item": "false",
+                "collection": ["americanlibraries"],
+            },
+        }
 
-        assert SolrProcessor.get_ebook_info(editions)['ia'] == [
+        assert SolrProcessor.build_ebook_data(editions, ia_md)['ia'] == [
             "ocaid_open",
             "ocaid_borrowable",
             "ocaid_printdisabled",
-            "ocaid_restricted"
+            "ocaid_restricted",
         ]
 
     def test_goog_deprioritized(self):
         editions = [
-            {
-                "key": "/books/OL789M",
-                "ocaid": "foobargoog",
-                "ia_collection": [],
-            },
-            {
-                "key": "/books/OL789M",
-                "ocaid": "foobarblah",
-                "ia_collection": [],
-            },
+            {"key": "/books/OL789M", "ocaid": "foobargoog"},
+            {"key": "/books/OL789M", "ocaid": "foobarblah"},
         ]
-        assert SolrProcessor.get_ebook_info(editions)['ia'] == ["foobarblah", "foobargoog"]
+        assert SolrProcessor.build_ebook_data(editions, {})['ia'] == [
+            "foobarblah",
+            "foobargoog",
+        ]
 
     def test_excludes_fav_ia_collections(self):
         doc = {}
         editions = [
-            {
-                "key": "/books/OL789M",
-                "ocaid": "foobargoog",
-                "ia_collection": ['americanlibraries', 'fav-foobar'],
-            },
-            {
-                "key": "/books/OL789M",
-                "ocaid": "foobarblah",
-                "ia_collection": ['fav-bluebar', 'blah'],
-            },
+            {"key": "/books/OL789M", "ocaid": "foobargoog"},
+            {"key": "/books/OL789M", "ocaid": "foobarblah"},
         ]
+        ia_md = {
+            "foobargoog": {"collection": ['americanlibraries', 'fav-foobar']},
+            "foobarblah": {"collection": ['fav-bluebar', 'blah']},
+        }
 
-        doc = SolrProcessor.get_ebook_info(editions)
+        doc = SolrProcessor.build_ebook_data(editions, ia_md)
         assert doc['ia_collection_s'] == "americanlibraries;blah"
 
 
