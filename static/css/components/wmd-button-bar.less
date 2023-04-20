@@ -5,6 +5,11 @@
 
 @import (less) "less/font-families.less";
 
+// Avoid layout shift from toolbar appearing
+textarea.markdown:not([id]) {
+  margin-top: 35px;
+}
+
 .wmd-button-bar {
   overflow: hidden;
   // on mobile hide all tools beyond the first 8.
