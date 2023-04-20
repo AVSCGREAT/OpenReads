@@ -75,7 +75,7 @@ $putctx("robots", "noindex,nofollow")
 
             const missingKeys = keys.filter(key => !this.cache[key]);
             console.warn('Missing books', missingKeys);
-            
+
             for (const {key, render_fn_name} of this.queue) {
                 this.renderKey(key, render_fn_name, this.cache[key]);
             }
@@ -138,7 +138,7 @@ $jsdef render_seed_field(i, seed):
         <input id="work-$i" class="work work-autocomplete" value="$seed['key'].split('/')[-1]" placeholder="$_('Search for a book')" />
         $# Actual value
         <input id="work-$i-key" name="seeds--$i--key" type="hidden" value="$seed['key']" />
-        <a href="javascript:;" class="mia__remove red plain" title="$_('Remove this item')">[x]</a>        
+        <a href="javascript:;" class="mia__remove red plain" title="$_('Remove this item')">[x]</a>
         $if seed['key']:
         <hr />
         $if seed['key'].startswith('/works/') or seed['key'].startswith('/books/'):

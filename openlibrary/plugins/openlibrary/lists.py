@@ -75,8 +75,7 @@ def get_list_data(list, seed, include_cover_url=True):
         d['cover_url'] = cover and cover.url("S") or "/images/icons/avatar_book-sm.png"
         if 'None' in d['cover_url']:
             d['cover_url'] = "/images/icons/avatar_book-sm.png"
-    owner = list.get_owner()
-    if owner:
+    if owner := list.get_owner():
         d['owner'] = web.storage(displayname=owner.displayname or "", key=owner.key)
     else:
         d['owner'] = None

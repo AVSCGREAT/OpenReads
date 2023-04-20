@@ -1111,8 +1111,7 @@ class lists_autocomplete(delegate.page):
         # look for ID in query string here
         q = solr.escape(i.q).strip()
         # TODO: Update for lists
-        embedded_olid = find_work_olid_in_string(q)
-        if embedded_olid:
+        if embedded_olid := find_work_olid_in_string(q):
             solr_q = 'key:"/works/%s"' % embedded_olid
         else:
             solr_q = f'name:"{q}"^2 OR name:({q}*)'
