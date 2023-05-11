@@ -12,6 +12,9 @@ $# * check_loan_status - whether to check the user's loan status to determine re
 
 $ loanstatus_start_time = time()
 
+$ loans = len(ctx.user.get_loans())
+$ max_loans = loans == 5
+
 $ availability = (doc.availability or {}) if hasattr(doc, 'availability') else {}
 $ ocaid = doc.get('ocaid') or availability.get('identifier')
 $ work_key = work_key or (doc.get('works') and doc.works[0].key)
@@ -81,7 +84,13 @@ $elif ocaid and ctx.user and ctx.user.is_printdisabled():
     $:macros.BookPreview(ocaid, linkback=not no_index)
 
 $elif availability.get('is_lendable'):
-  $if availability.get("available_to_borrow") or availability.get("available_to_browse"):
+  $if max_loans:
+    <div class="cta-button-group">
+      <a href="javascript:void(0)" class="cta-btn cta-btn--missing" title="$_('You\'ve hit the borrowing limit of 5 books.')"
+      data-ol-link-track="CTAClick|Borrow">$_('Borrow')</a>
+    </div>
+    <a href="/account/loans">Manage my loans</a>
+  $elif availability.get("available_to_borrow") or availability.get("available_to_browse"):
     $:macros.ReadButton(ocaid, borrow=True, listen=listen)
   $elif availability.get('available_to_waitlist'):
     $if waiting_loan:
