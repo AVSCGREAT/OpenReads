@@ -456,7 +456,7 @@ jQuery(function () {
     const ratingForms = document.querySelectorAll('.star-rating-form')
     if (ratingForms.length) {
         import(/* webpackChunkName: "star-ratings" */'./handlers')
-            .then((module) => module.initRatingHandlers(ratingForms));
+            .then((module) => ratingForms.forEach(form => new module.RatingsForm(form).attach()));
     }
 
     // Book page navbar initialization:
@@ -526,4 +526,8 @@ jQuery(function () {
             .then(module => module.initBreadcrumbSelect(crumbs));
     }
 
+    if (document.querySelector('.list-books')) {
+        import(/* webpackChunkName: "list-books" */ './list_books')
+            .then(module => module.ListBooks.init());
+    }
 });

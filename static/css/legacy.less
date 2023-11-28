@@ -393,6 +393,11 @@ span {
     font-weight: normal !important;
     font-family: @lucida_sans_serif-2;
 
+    a.active {
+      font-weight: bold;
+      text-decoration: none;
+    }
+
     &.sorter {
       margin-right: 5px;
       margin-left: 10px;
@@ -1014,60 +1019,6 @@ div#searchResults {
       height: 20px;
     }
   }
-  .SRPCoverBlank {
-    position: relative;
-    width: 130px;
-    height: 200px;
-    padding: 10px;
-    margin: 0 15px 20px 0;
-    text-align: center;
-    float: left;
-    background: @lighter-grey;
-    cursor: pointer;
-    display: none;
-    .innerBorder {
-      float: left;
-      width: 130px;
-      height: 200px;
-      border: 1px solid @white;
-    }
-    a {
-      text-decoration: none;
-    }
-  }
-  &.work,
-  &.work ul,
-  &.work li {
-    width: 700px !important;
-  }
-  &.narrow,
-  &.narrow ul,
-  &.narrow li {
-    width: 610px !important;
-  }
-  &.wide,
-  &.wide ul,
-  &.wide li {
-    width: 920px !important;
-  }
-  &.add,
-  &.add ul,
-  &.add li {
-    width: 860px !important;
-    margin: 0 30px !important;
-  }
-  &.narrow .resultTitle {
-    max-width: 480px !important;
-  }
-  &.wide .resultTitle {
-    max-width: 780px;
-  }
-  &.add .resultTitle {
-    max-width: 720px;
-  }
-  &.work .resultTitle {
-    max-width: 570px !important;
-  }
 }
 
 // openlibrary/templates/work_search.html
@@ -1367,15 +1318,6 @@ ul {
       }
     }
   }
-  &.wide {
-    li span.resultTitle {
-      width: 813px;
-      max-width: 813px;
-      .subjects {
-        font-size: .8em;
-      }
-    }
-  }
   // openlibrary/templates/type/user/view.html
   &.clean {
     border-top: none !important;
@@ -1420,34 +1362,6 @@ ul {
 }
 
 @import (less) "components/page-history.less";
-
-// openlibrary/macros/CoverImage.html
-// openlibrary/macros/SRPCoverImage.html
-// openlibrary/templates/covers/book_cover.html
-// openlibrary/templates/covers/book_cover_single_edition.html
-.BookTitle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 105px;
-  margin-left: -52px;
-  height: 100px;
-  margin-top: -50px;
-  vertical-align: middle;
-  color: @dark-grey;
-  font-size: .875em;
-  line-height: normal;
-}
-
-// openlibrary/macros/SRPCoverImage.html
-// openlibrary/templates/covers/book_cover.html
-// openlibrary/templates/covers/book_cover_single_edition.html
-.Author {
-  color: @grey;
-  font-style: italic;
-  padding: 4px 4px 0;
-  font-size: 11px;
-}
 
 // openlibrary/macros/SearchResults.html
 // openlibrary/macros/SearchResultsWork.html
@@ -1525,83 +1439,6 @@ span.actions {
     display: block;
     margin: 0 auto;
     padding: 0;
-  }
-}
-
-// openlibrary/templates/stats/readinglog.html
-// openlibrary/templates/type/author/view.html
-// openlibrary/templates/work_search.html
-// openlibrary/templates/books/check.html
-// openlibrary/templates/account/books.html
-// openlibrary/macros/SearchResults.html
-// openlibrary/macros/FulltextResults.html
-ul.list-books {
-  > li {
-    .display-flex();
-  }
-  // openlibrary/macros/SearchResults.html
-  // openlibrary/macros/SearchResultsWork.html
-  // openlibrary/templates/books/check.html
-  // openlibrary/templates/books/show.html
-  // openlibrary/templates/books/works-show.html
-  // openlibrary/templates/lists/preview.html
-  // openlibrary/templates/lists/snippet.html
-  // openlibrary/templates/type/list/embed.html
-  // openlibrary/templates/type/list/view.html
-  .resultTitle {
-    display: block;
-    margin: 0 !important;
-    font-family: @lucida_sans_serif-1;
-    color: @grey;
-  }
-
-  // `span.resultTitle .bookauthor` is used in:
-  // * openlibrary/macros/SearchResults.html
-  // * openlibrary/macros/SearchResultsWork.html
-  // `span.resultPublisher` is used in
-  // * openlibrary/macros/SearchResultsWork.htm
-  // * openlibrary/templates/books/check.html
-  // * openlibrary/templates/books/show.html
-  // * openlibrary/templates/books/works-show.html
-  .resultTitle .bookauthor,
-  span.resultPublisher {
-    font-size: .75em;
-    color: @grey;
-    font-family: @lucida_sans_serif-6;
-  }
-  // openlibrary/templates/books/works-show.html
-  // openlibrary/templates/books/show.html
-  // openlibrary/templates/books/check.html
-  // openlibrary/macros/SearchResultsWork.html
-  // openlibrary/macros/SearchResults.html
-  span.resultPublisher {
-    display: block;
-  }
-  // openlibrary/macros/SearchResults.html
-  // openlibrary/templates/books/show.html
-  span.resultType {
-    font-size: .6875em;
-  }
-}
-
-// openlibrary/templates/search/lists.html
-// openlibrary/templates/lists/lists.html
-div.wide {
-  ul.list-books {
-    span.resultTitle {
-      max-width: 850px;
-    }
-  }
-}
-
-// openlibrary/templates/type/list/embed.html
-// openlibrary/templates/type/list/view.html
-// openlibrary/templates/type/work/editions.html
-div.narrow {
-  ul.list-books {
-    span.resultTitle {
-      max-width: 500px !important;
-    }
   }
 }
 
