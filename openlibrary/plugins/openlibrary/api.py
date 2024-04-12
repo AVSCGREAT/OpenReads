@@ -73,6 +73,7 @@ class trending_books_api(delegate.page):
             hours=0,
             sort_by_count=False,
             minimum=0,
+            q='',
             fields='',
         )
         days = SINCE_DAYS.get(period, int(i.days))
@@ -84,6 +85,7 @@ class trending_books_api(delegate.page):
             books_only=True,
             sort_by_count=i.sort_by_count != "false",
             minimum=i.minimum,
+            q=i.q.strip(),
             fields=i.fields.split(',') if i.fields else None,
         )
         result = {
