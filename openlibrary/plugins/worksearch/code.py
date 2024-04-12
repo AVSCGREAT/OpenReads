@@ -57,13 +57,16 @@ if hasattr(config, 'plugin_worksearch'):
 
 
 @public
-def get_solr_works(work_key: Iterable[str]) -> dict[str, dict]:
+def get_solr_works(
+    work_key: Iterable[str],
+    fields: list[str] | None = None,
+) -> dict[str, dict]:
     from openlibrary.plugins.worksearch.search import get_solr
 
     return {
         doc['key']: doc
         for doc in get_solr().get_many(
-            set(work_key), fields=WorkSearchScheme.default_fetched_fields
+            set(work_key), fields=fields or WorkSearchScheme.default_fetched_fields
         )
     }
 
