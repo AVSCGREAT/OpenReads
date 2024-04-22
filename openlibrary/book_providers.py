@@ -239,15 +239,17 @@ def get_cover_url(ed_or_solr: Edition | dict) -> str | None:
         if ed_or_solr.get("cover_i"):
             return get_coverstore_public_url() + f'/b/id/{ed_or_solr["cover_i"]}-{size}.jpg'
         else:
-            # Solr document augmented with availability
-            availability = ed_or_solr.get("availability", {}) or {}
+            return None
 
-            if availability.get("openlibrary_edition"):
-                olid = availability.get("openlibrary_edition")
-                return f"{get_coverstore_public_url()}/b/olid/{olid}-{size}.jpg"
-            if availability.get("identifier"):
-                ocaid = ed_or_solr["availability"]["identifier"]
-                return f"https://archive.org/download/{ocaid}/page/cover_w180_h360.jpg"
+    # Solr document augmented with availability
+    availability = ed_or_solr.get("availability", {}) or {}
+
+    if availability.get("openlibrary_edition"):
+        olid = availability.get("openlibrary_edition")
+        return f"{get_coverstore_public_url()}/b/olid/{olid}-{size}.jpg"
+    if availability.get("identifier"):
+        ocaid = ed_or_solr["availability"]["identifier"]
+        return f"//archive.org/services/img/{ocaid}"
 
     # Plain solr - we don't know which edition is which here, so this is most
     # preferable
