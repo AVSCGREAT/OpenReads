@@ -283,10 +283,10 @@ class WorkSearchScheme(SearchScheme):
             # qf: the fields to query un-prefixed parts of the query.
             # e.g. 'harry potter' becomes
             # 'text:(harry potter) OR alternative_title:(harry potter)^20 OR ...'
-            qf='text alternative_title^10 author_name^10',
+            qf='text alternative_title^10 author_alternative_name^10',
             # pf: phrase fields. This increases the score of documents that
             # match the query terms in close proximity to each other.
-            pf='alternative_title^10 author_name^10',
+            pf='alternative_title^10 author_alternative_name^10',
             # bf (boost factor): boost results based on the value of this
             # field. I.e. results with more editions get boosted, upto a
             # max of 100, after which we don't see it as good signal of
@@ -445,7 +445,7 @@ class WorkSearchScheme(SearchScheme):
             full_ed_query = '({{!edismax bq="{bq}" v="{v}" qf="{qf}"}})'.format(
                 # See qf in work_query
                 qf='text alternative_title^4'
-                + (' author_name^4' if get_solr_next() else ''),
+                + (' author_alternative_name' if get_solr_next() else ''),
                 # Because we include the edition query inside the v="..." part,
                 # we need to escape quotes. Also note that if there is no
                 # edition query (because no fields in the user's work query apply),
