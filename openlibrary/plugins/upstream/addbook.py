@@ -218,6 +218,7 @@ class addbook(delegate.page):
             book_title="",
             publisher="",
             publish_date="",
+            original_publish_date="",
             id_name="",
             id_value="",
             web_book_url="",
@@ -478,6 +479,7 @@ class addbook(delegate.page):
             title=i.title,
             publishers=[i.publisher],
             publish_date=i.publish_date,
+            original_publish_date=i.original_publish_date,
         )
         if i.get('web_book_url'):
             edition.set_provider_data({"url": i.web_book_url, "format": "web"})
