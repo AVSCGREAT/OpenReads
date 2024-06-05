@@ -310,6 +310,7 @@ def do_search(
     sort: str | None,
     page=1,
     rows=100,
+    facet=True,
     spellcheck_count=None,
 ):
     """
@@ -325,7 +326,7 @@ def do_search(
     else:
         fields = list(WorkSearchScheme.default_fetched_fields | {'editions'})
     return run_solr_query(
-        WorkSearchScheme(), param, rows, page, sort, spellcheck_count, fields=fields
+        WorkSearchScheme(), param, rows, page, sort, spellcheck_count, fields=fields, facet=facet
     )
 
 
@@ -511,7 +512,7 @@ class search(delegate.page):
         rows = 20
         if param:
             search_response = do_search(
-                param, sort, page, rows=rows, spellcheck_count=3
+                param, sort, page, rows=rows, spellcheck_count=3, facet=False
             )
         else:
             search_response = SearchResponse(
