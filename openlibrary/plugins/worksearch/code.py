@@ -326,7 +326,14 @@ def do_search(
     else:
         fields = list(WorkSearchScheme.default_fetched_fields | {'editions'})
     return run_solr_query(
-        WorkSearchScheme(), param, rows, page, sort, spellcheck_count, fields=fields, facet=facet
+        WorkSearchScheme(),
+        param,
+        rows,
+        page,
+        sort,
+        spellcheck_count,
+        fields=fields,
+        facet=facet,
     )
 
 

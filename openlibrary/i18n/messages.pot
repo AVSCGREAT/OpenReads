@@ -412,21 +412,21 @@ msgstr ""
 
 #: SearchNavigation.html SubjectTags.html lib/nav_foot.html lib/nav_head.html
 #: subjects.html subjects/notfound.html type/author/view.html
-#: type/list/view_body.html work_search.html
+#: type/list/view_body.html
 msgid "Subjects"
 msgstr ""
 
 #: SubjectTags.html subjects.html type/author/view.html
-#: type/list/view_body.html work_search.html
+#: type/list/view_body.html
 msgid "Places"
 msgstr ""
 
 #: SubjectTags.html admin/menu.html subjects.html type/author/view.html
-#: type/list/view_body.html work_search.html
+#: type/list/view_body.html
 msgid "People"
 msgstr ""
 
-#: SubjectTags.html subjects.html type/list/view_body.html work_search.html
+#: SubjectTags.html subjects.html type/list/view_body.html
 msgid "Times"
 msgstr ""
 
@@ -719,32 +719,6 @@ msgid "Search Books"
 msgstr ""
 
 #: work_search.html
-msgid "eBook?"
-msgstr ""
-
-#: type/edition/view.html type/work/view.html work_search.html
-msgid "Language"
-msgstr ""
-
-#: books/add.html books/edit.html books/edit/edition.html lib/nav_head.html
-#: search/advancedsearch.html work_search.html
-msgid "Author"
-msgstr ""
-
-#: work_search.html
-msgid "First published"
-msgstr ""
-
-#: search/advancedsearch.html type/edition/view.html type/work/view.html
-#: work_search.html
-msgid "Publisher"
-msgstr ""
-
-#: work_search.html
-msgid "Classic eBooks"
-msgstr ""
-
-#: work_search.html
 msgid "Keywords"
 msgstr ""
 
@@ -803,6 +777,11 @@ msgstr ""
 
 #: work_search.html
 msgid "Published by"
+msgstr ""
+
+#: books/add.html books/edit.html books/edit/edition.html lib/nav_head.html
+#: search/advancedsearch.html work_search.html
+msgid "Author"
 msgstr ""
 
 #: work_search.html
@@ -4911,6 +4890,10 @@ msgstr ""
 msgid "Person"
 msgstr ""
 
+#: search/advancedsearch.html type/edition/view.html type/work/view.html
+msgid "Publisher"
+msgstr ""
+
 #: search/advancedsearch.html
 msgid "How to search?"
 msgstr ""
@@ -5467,6 +5450,10 @@ msgstr ""
 #: type/edition/view.html type/work/view.html
 #, python-format
 msgid "Search for other books from %(publisher)s"
+msgstr ""
+
+#: type/edition/view.html type/work/view.html
+msgid "Language"
 msgstr ""
 
 #: type/edition/view.html type/work/view.html
