@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Protocol, TYPE_CHECKING, TypeVar
+from typing import Any, Protocol, TYPE_CHECKING, TypeVar, cast
 from collections.abc import Callable, Iterable, Iterator
 import unicodedata
 
@@ -181,11 +181,12 @@ def render_component(
     asyncDefer=False,
 ) -> str:
     """
-    :param str name: Name of the component (excluding extension)
+    :param str name: Name of the component; e.g. 'LibraryExplorer'
     :param dict attrs: attributes to add to the component element
     """
     from openlibrary.plugins.upstream.code import static_url
 
+    component_name = f'ol-{kebab_case(name)}'
     attrs = attrs or {}
     attrs_str = ''
     for key, val in attrs.items():
@@ -194,20 +195,29 @@ def render_component(
             # On the Vue side use decodeURIComponent to decode
             val = urllib.parse.quote(val)
         attrs_str += f' {key}="{val}"'
+
     html = ''
-    included = web.ctx.setdefault("included-components", [])
+    included = cast(list, web.ctx.setdefault("included-components", []))
 
     if len(included) == 0:
         # Need to include Vue
-        html += '<script src="%s"></script>' % static_url('build/vue.js')
-
+        html += (
+            '<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>'
+        )
+        # Polyfill because @vue/shared calls process.env for some reason
+        html += (
+            '''<script>window.process = {env: {NODE_ENV: 'production'} };</script>'''
+        )
     if name not in included:
-        url = static_url('build/components/production/ol-%s.min.js' % name)
-        script_attrs = '' if not asyncDefer else 'async defer'
-        html += f'<script {script_attrs} src="{url}"></script>'
+        js_url = static_url(f'build/components/{component_name}/index.js')
+        css_url = static_url(f'build/components/{component_name}/style.css')
+        html += f'<script src="{js_url}"></script>'
+        html += f'<link rel="stylesheet" href="{css_url}">'
         included.append(name)
 
-    html += f'<ol-{kebab_case(name)} {attrs_str}></ol-{kebab_case(name)}>'
+    # Note: Although it looks like a web component, it's not, it's just an
+    # element we mount Vue to.
+    html += f'<{component_name} {attrs_str}></{component_name}>'
     return html
 
 
